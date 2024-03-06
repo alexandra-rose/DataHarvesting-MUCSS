@@ -1,0 +1,11 @@
+---
+title: "Assignment guideline"
+format: html
+editor: visual
+---
+
+1\. private Github repository that you share with his email (cimentadaj\@gmail.com)
+
+2.  README file on how to reproduce the scraper exactly
+3.  entire scraping program should be in a pdm html file
+4.  rmarkdown file should run exactly and be slay
