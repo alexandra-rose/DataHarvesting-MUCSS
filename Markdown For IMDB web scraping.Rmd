@@ -17,6 +17,11 @@ rm(list = ls())
 library(rvest)
 library(httr)
 library(dplyr)
+library(tidytext)
+library(purrr)
+library(ggplot2)
+library(scales)
+
 ```
 
 ### Link to the website
@@ -277,5 +282,133 @@ for (url in full_movie_urls) {
 }
 
 print(movies_df_final)
+
+```
+
+## Sensitive analysis of the Feature Reviews
+
+```{r}
+# the objective is to perform a sentiment analysis for each row of reviews we attain for each movie. Thus creating a variable that classify the sentiment of each review if it is positive or negative, and in some instances neutral.
+
+Review_Sentiment <- function(review) {
+  sentiment_score <- data_frame(text = review) %>%
+    unnest_tokens(word, text) %>%
+    inner_join(get_sentiments("bing"), by = "word") %>%
+    summarise(net_sentiment = sum(case_when(
+      sentiment == "positive" ~ 1,
+      sentiment == "negative" ~ -1,
+      TRUE ~ 0
+    ))) %>%
+    pull(net_sentiment)
+  
+  if (sentiment_score > 0) {
+    return("positive")
+  } else if (sentiment_score < 0) {
+    return("negative")
+  } else {
+    return("neutral") 
+  }
+}
+
+movies_df_final <- movies_df_final %>%
+  mutate(ReviewClassification = map_chr(FeatureReview, Review_Sentiment))
+
+
+```
+
+## Descriptive analysis to understand the distribution of the data set.
+
+```{r}
+# Graph of the top genres of movies in my data set with their respective count of reviews sentiments
+
+top_n_genres <- 6
+
+top_genres <- movies_df_final %>%
+  count(Genre, sort = TRUE) %>%
+  top_n(top_n_genres, n)
+
+filtered_movies <- movies_df_final %>%
+  filter(Genre %in% top_genres$Genre)
+
+Plot <- ggplot(filtered_movies, aes(x = ReviewClassification, fill = ReviewClassification)) +
+  geom_bar(position = position_dodge(), color = "grey") +
+  facet_wrap(~ Genre, scales = "free_x") +
+  theme_light() +
+  labs(title = "Top Genres by Review Classification",
+       x = NULL, y = NULL) +
+  scale_fill_manual(values = c("negative" = "#8dd3c7", "neutral" = "#ffffb3", "positive" = "#bebada")) +
+theme(
+    strip.text.x = element_text(size = 12, family = "sans"),
+    axis.text.x = element_text(angle = 45, vjust = 1, hjust=1, family = "sans"),
+    axis.text.y = element_text(family = "sans"),
+    panel.spacing = unit(1, "lines"),
+    plot.title = element_text(hjust = 0.5, face = "bold", family = "sans"),
+    legend.position = "none"
+  )
+print(Plot)
+
+```
+
+```{r}
+# distribution of the movies per decade
+year <- as.numeric(movies_df_final$Year)
+movies_df_final <- movies_df_final %>%
+  mutate(Decade = floor(year / 10) * 10) 
+
+movies_per_decade <- movies_df_final %>%
+  group_by(Decade) %>%
+  summarise(Count = n()) %>%
+  mutate(Decade = factor(Decade, levels = unique(Decade)))
+
+Plot2 <- ggplot(movies_per_decade, aes(x = Decade, y = Count)) +
+  geom_bar(stat = "identity", fill = "#8856a7", width = 0.7) +
+  theme_light() +
+  labs(title = "Number of Movies from the Top250 per Decade",
+       x = NULL,
+       y = NULL) +
+  theme(
+    plot.title = element_text(face = "bold", family = "sans", size = 14),
+    axis.title = element_text(family = "sans", size = 11),
+    axis.text = element_text(family = "sans", size = 10),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    legend.position = "none"
+  )
+
+print(Plot2)
+
+
+
+```
+
+```{r}
+
+movies_df_final$Budget <- as.numeric(gsub("[^0-9]", "", movies_df_final$Budget))
+movies_df_final$IMDbscore <- as.numeric(movies_df_final$IMDbscore)
+movies_df_final <- na.omit(movies_df_final)
+
+Plot3 <- ggplot(movies_df_final, aes(x = Budget, y = IMDbscore, size = Budget, color = IMDbscore)) +
+  geom_point(alpha = 1) +
+  scale_size_continuous(range = c(1, 8)) + 
+  scale_color_gradient(low = "blue", high = "red", limits = c(1, 10)) + 
+  scale_x_continuous(labels = dollar_format(prefix = "$", suffix = "")) +
+  scale_y_continuous(limits = c(1, 10), breaks = seq(1, 10, by = 1)) + 
+  theme_light() +
+  labs(title = "Bubble Chart of Movie Budgets vs. IMDB Score",
+       x = NULL,
+       y = NULL,
+       size = "Budget",
+       color = "IMDB Score") +
+  theme(
+    plot.title = element_text(face = "bold", family = "sans", size = 14),
+    axis.title = element_text(family = "sans", size = 12),
+    axis.text = element_text(family = "sans", size = 10),
+    legend.position = "right"
+  ) +
+  guides(size = FALSE, color = guide_legend()) 
+
+
+print(Plot3)
+
 
 ```
