@@ -382,7 +382,6 @@ print(Plot2)
 ```
 
 ```{r}
-
 movies_df_final$Budget <- as.numeric(gsub("[^0-9]", "", movies_df_final$Budget))
 movies_df_final$IMDbscore <- as.numeric(movies_df_final$IMDbscore)
 movies_df_final <- na.omit(movies_df_final)
