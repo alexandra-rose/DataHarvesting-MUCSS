@@ -4,6 +4,8 @@
 
 This R script scrapes details about movies listed in IMDb's Top 250 chart. The list can be found in <https://www.imdb.com/chart/top/?ref_=tt_awd>.
 
+### Variables
+
 The Movie Attributes included in the data set are the following:
 
 -   Title.
@@ -42,7 +44,7 @@ The Movie Attributes included in the data set are the following:
 
 -   Oscar information: number of Academy Award wins and nominations.
 
-**Prerequisites**
+### **Prerequisites**
 
 Before running this script, install the following R packages:
 
@@ -62,7 +64,7 @@ Before running this script, install the following R packages:
 
 ### **Running the Scraper**
 
-1.   Open the R script called “**Markdown For IMDB web scraping.Rmd”** in RStudio.
+1.  Open the R script called “**Markdown For IMDB web scraping.Rmd”** in RStudio.
 
 2.  Run the entire script to scrape data from the IMDb Top 250 chart.
 
@@ -74,9 +76,9 @@ A sentiment analysis is performed on the text of the featured reviews collected 
 
 ### **Plots**
 
-Three descriptive plots were created to visualize the dataset:
+Three descriptive plots were created to visualize the data set:
 
-1.  Top Genres by Review Classification: This plot displays the count of positive, negative, and neutral review classifications for the top genres in the dataset. It helps in understanding which genres are most favored according to the sentiment analysis of the feature reviews.
+1.  Top Genres by Review Classification: This plot displays the count of positive, negative, and neutral review classifications for the top genres in the data set. It helps in understanding which genres are most favored according to the sentiment analysis of the feature reviews.
 2.  Number of Movies from the Top 250 per Decade: A bar chart that shows the distribution of the movies in the IMDb Top 250 list across different decades. This plot provides insights into which decades are most represented in the list.
 3.  Bubble Chart of Movie Budgets vs. IMDB Score: This scatter plot visualizes the relationship between the budgets of the movies and their IMDb scores, with the size of each point representing the budget of the movie. The color gradient from blue to red indicates the range of IMDb scores. This plot helps in exploring whether there's a correlation between the movie's budget and its success on IMDb.
 
