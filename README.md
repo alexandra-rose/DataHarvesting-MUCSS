@@ -6,7 +6,7 @@ This R script scrapes details about movies listed in IMDb's Top 250 chart. The l
 
 ### **Running the Scraper**
 
-1.  Open the R script called “**Final assignment- movie analysis”** in RStudio.
+1.  Open the R script called “**Markdown For IMDB web scraping.Rmd”** in RStudio.
 2.  Set your user agent in the beginning. 
 3.  Follow the instructions below regarding the Reddit API, and then you can run the whole script. 
 
