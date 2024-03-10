@@ -32,7 +32,8 @@ link <- "https://www.imdb.com/chart/top"
 
 ```{r}
 set_config(
-  user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36; Sofia Villamil / sofia.v1999@gmail.com"))
+  #user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36; Sofia Villamil / sofia.v1999@gmail.com"))
+  user_agent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36, Alexandra Salo, alexandra.rose.salo@gmail.com"))
 
 Top250_website <- link %>% read_html()
 ```
@@ -40,7 +41,18 @@ Top250_website <- link %>% read_html()
 ### Titles
 
 ```{r}
-movie_title_nodes <- html_nodes(Top250_website, 'h3.ipc-title__text')
+# Make an HTTP GET request with 'Accept-Language' header set to 'en'
+response <- GET(link, add_headers("Accept-Language" = "en-US,en;q=0.5"))
+
+# Parse the HTML content from the response
+Top250_website <- content(response, "text") %>% read_html()
+
+# Select the movie title nodes
+movie_title_nodes <- html_nodes(Top250_website, "h3.ipc-title__text")
+
+# Extracting movie titles
+movie_titles <- html_text(movie_title_nodes)
+
 length(movie_title_nodes) # I have node I don't need.
 
 # Extracting the titles I need only
