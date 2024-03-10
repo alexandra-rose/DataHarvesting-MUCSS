@@ -1,14 +1,14 @@
 # DataHarvesting-MUCSS
 
---Preparing for the Reddit API--
+## *Preparing for the Reddit API*
 
 In order to be able to execute the code, especially the Reddit API, some prior steps are needed. In order to access the Reddit API you need to get a client-id and a client-secret from the Reddit website. In order to do this we need to use OAuth2 to get our ID and tokens. To use the OAuth2, you need to have a pre-existing account with Reddit, so if you don't have one, make one as the first step!
 
-In case needed OAuth2 support documentation can be found here: https://github.com/reddit-archive/reddit/wiki/OAuth2
+In case needed OAuth2 support documentation can be found here: <https://github.com/reddit-archive/reddit/wiki/OAuth2>
 
-Next you need to go to this website https://www.reddit.com/prefs/apps and click "are you a developer? create an app...", and create an application with your account. The details of the application don't matter, you can put whatever reasonable information there that you like. Once this is made, you should get a 'personal use script' code and a 'secret' code. This information you need to save. 
+Next you need to go to this website <https://www.reddit.com/prefs/apps> and click "are you a developer? create an app...", and create an application with your account. The details of the application don't matter, you can put whatever reasonable information there that you like. In the URI part we should fill it out with any link (ex.[**https://www.reddit.com/r/subredditname.json**](https://www.reddit.com/r/subredditname.json)). Once this is made, you should get a 'personal use script' code and a 'secret' code. This information you need to save.
 
-Next you can move to the Reddit API code, make sure you have all the packages installed and in use. Then you need to input your own API credentials into the code so you can get the temporary token to be able to scrape the data. The tokens expire, so every now and then you need to get a new token. This was put into a function request_token. 
+Next you can move to the Reddit API code, make sure you have all the packages installed and in use. Then you need to input your own API credentials into the code so you can get the temporary token to be able to scrape the data. The tokens expire, so every now and then you need to get a new token. This was put into a function request_token.
 
 ## ***IMDb Top 250 Web Scraper***
 
@@ -84,13 +84,18 @@ Before running this script, install the following R packages:
 
 A sentiment analysis is performed on the text of the featured reviews collected for each movie. It uses the tidy text package to classify each review as positive, negative, or neutral based on the sum of the sentiment scores of the words contained in the review. This is a crucial step for understanding the general sentiment of the audience towards the movie.
 
+### **Sentiment Analysis of Reddit Comments**
+
+A sentiment analysis is performed on the comments attained from the Reddit API collected for each movie. It uses the tidy text package to classify each review as positive, negative, or neutral based on the sum of the sentiment scores of the words contained in the comment. This is a crucial step for understanding the general sentiment of the audience towards the movie in a social media platform.
+
 ### **Plots**
 
-Three descriptive plots were created to visualize the data set:
+Four descriptive plots were created to visualize the data set:
 
-1.  Top Genres by Review Classification: This plot displays the count of positive, negative, and neutral review classifications for the top genres in the data set. It helps in understanding which genres are most favored according to the sentiment analysis of the feature reviews.
-2.  Number of Movies from the Top 250 per Decade: A bar chart that shows the distribution of the movies in the IMDb Top 250 list across different decades. This plot provides insights into which decades are most represented in the list.
-3.  Bubble Chart of Movie Budgets vs. IMDB Score: This scatter plot visualizes the relationship between the budgets of the movies and their IMDb scores, with the size of each point representing the budget of the movie. The color gradient from blue to red indicates the range of IMDb scores. This plot helps in exploring whether there's a correlation between the movie's budget and its success on IMDb.
+1.  Sentiment Count for the First Three Movies: This plot displays the count of positive, negative, and neutral review classifications for the top three movies in the data set. It helps to understand which is the general sentiment towards this top three movies according to Reddit.
+2.  Top Genres by Review Classification: This plot displays the count of positive, negative, and neutral review classifications for the top genres in the data set. It helps in understanding which genres are most favored according to the sentiment analysis of the feature reviews.
+3.  Number of Movies from the Top 250 per Decade: A bar chart that shows the distribution of the movies in the IMDb Top 250 list across different decades. This plot provides insights into which decades are most represented in the list.
+4.  Bubble Chart of Movie Budgets vs. IMDB Score: This scatter plot visualizes the relationship between the budgets of the movies and their IMDb scores, with the size of each point representing the budget of the movie. The color gradient from blue to red indicates the range of IMDb scores. This plot helps in exploring whether there's a correlation between the movie's budget and its success on IMDb.
 
 **Notes**
 
@@ -101,4 +106,3 @@ Three descriptive plots were created to visualize the data set:
 -   The script includes error handling to skip any URLs that might cause an error during the scraping process.
 
 -   The structure of web pages can change over time. If IMDb updates the structure of its pages, the scraper may need to be updated as well.
-
