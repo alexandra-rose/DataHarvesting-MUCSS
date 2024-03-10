@@ -1,14 +1,14 @@
 ---
-title: "Script IMDB"
+title: "Script"
 author: "Alexandra Salo and Sofía Villamil"
 date: "2024-03-03"
 output: html_document
 ---
 
-## IMDB - Web scraping
+# *Data Harvesting Script*
 
 ```{r}
-#rm(list = ls())
+rm(list = ls())
 ```
 
 ### Libraries
@@ -21,19 +21,34 @@ library(tidytext)
 library(purrr)
 library(ggplot2)
 library(scales)
+library(jsonlite)
+library(tidyverse)
+library(dplyr)
+library(httr)
+library(xml2)
+library(magrittr)
+library(scrapex)
+
 ```
 
-### Link to the website
+### User Agent
+
+```{r}
+set_config( user_agent("
+                       "))
+  #set here your user agent
+  useragent <-"
+  "
+#we will call on this variable later, also set your user agent here
+```
+
+## IMDB - Web scraping first stage
 
 ```{r}
 link <- "https://www.imdb.com/chart/top"
 ```
 
 ```{r}
-set_config(
-  user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36; Sofia Villamil / sofia.v1999@gmail.com"))
-  #user_agent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36, Alexandra Salo, alexandra.rose.salo@gmail.com"))
-
 Top250_website <- link %>% read_html()
 ```
 
@@ -60,7 +75,230 @@ print(movie_titles)
 
 ```
 
-### URL
+## Reddit API scraping!
+
+We will use the Reddit API to scrape comments about movie titles that we are interested in. In this case that is the 100 movie titles that we scraped from the IMBD website. We automate this using different functions and calling on all of them at the end in the main_function to collect a data frame that collects the name of movie that the comment is related to and the comments extracted from the discussion posts under the r/movies sub reddit. It also scrapes some sub comments.
+
+A function to request a token from the Reddit API.
+
+```{r}
+#function to collect a token for the Reddit API
+request_token <- function() {
+  # Your Reddit app details
+  client_id <- " " #personal script use, check readme file
+  client_secret <- " " #secret code, check readme file
+  username <- " " #your reddit email
+  password <- " " #your Reddit password
+ 
+  # Authenticate and get a token
+  response <- POST(
+    url = "https://www.reddit.com/api/v1/access_token",
+    body = list(grant_type = "password", username = username, password = password),
+    encode = "form",
+    authenticate(client_id, client_secret),
+    verbose()
+  )
+
+  # Extract token from response
+  token <- content(response)$access_token
+  token
+}
+```
+
+This function is used to extract the unique ID from each permalink that is found in the JSON of each link.
+
+```{r}
+extract_id <- function(link) {
+  match <- regmatches(link, regexpr("comments\\/(.{7})", link))
+  if (length(match) > 0) {
+    id <- substr(match[[1]], 10, 16)
+    if (substr(id, nchar(id), nchar(id)) == "/") {
+      id <- substr(id, 1, nchar(id) - 1)
+    }
+    return(id)
+  } else {
+    return(NA)  # Return NA if no match found
+  }
+}
+```
+
+A function to collect a list with the ID of the links of the posts.
+
+```{r}
+collect_post_links <- function(movietitles, token) {
+  all_id_codes <- c()  # Initialize an empty vector to store all id codes
+  
+  for (title in movietitles) {
+    search_url <- "https://api.reddit.com/r/movies/search"
+    search_params <- list(
+      q = title, 
+      sort = "relevance",
+      limit = 3, 
+      restrict_sr = "ON"
+    )
+    
+    req <- GET(
+      url = search_url, 
+      add_headers("Authorization" = paste("Bearer", token)), 
+      add_headers("User-Agent" = useragent), 
+      query = search_params
+    )
+    
+    #take a break so Reddit doesnt kick me out
+    Sys.sleep(runif(1, 1, 3))
+    
+    parsed_content <- fromJSON(content(req, "text"))
+    
+    str(parsed_content)
+    
+    children_list <- parsed_content$data$children
+    
+    result <- children_list %>%
+      as_tibble() %>%
+      unnest(cols = data) %>%
+      select(title, permalink)
+    
+    result <- result |> 
+      rowwise() %>%
+      mutate(id36 = extract_id(permalink)) |>
+      select(id36) |> 
+      unlist()  # Convert result to plain vector
+    
+    all_id_codes <- c(all_id_codes, result)  # Combine id codes from different movies
+    all_id_codes <- unname(all_id_codes)
+    
+  }
+  
+  return(all_id_codes)
+}
+```
+
+Two functions to collect the JSON and convert it to comments to extract.
+
+```{r}
+collect_JSONcomments <- function(IDcodes, token) {
+  all_parsed_content <- list()  # Initialize an empty list to store parsed content
+  
+  for (IDcode in IDcodes) {
+    # Define the URL for the endpoint
+    endpoint <- "https://api.reddit.com/r/movies/comments/article"
+    
+    # Define query parameters
+    query_params <- list(
+      article = IDcode,
+      limit = 3, 
+      depth = 2
+    )
+    
+    # Make the GET request
+    req2 <- GET(
+      url = endpoint,
+      query = query_params,
+      add_headers(
+        "Authorization" = paste("Bearer", token),
+        "User-Agent" = useragent
+      )
+    )
+    
+    #take a break so Reddit doesnt kick me out
+    Sys.sleep(runif(1, 1, 3))
+    
+    # Parse JSON content
+    parsed_content2 <- fromJSON(content(req2, "text"))
+    
+    # Append parsed_content2 to the list
+    all_parsed_content <- c(all_parsed_content, list(parsed_content2))
+  }
+  
+  return(all_parsed_content)
+}
+
+traverse_comments <- function(parsed_content_list) {
+  # Initialize an empty character vector to store comments
+  all_comments <- character()
+  
+  # Helper function to recursively traverse comments
+  traverse <- function(comment) {
+    # Append the comment body to the vector
+    all_comments <<- c(all_comments, comment$data$body)
+    
+    # Check if the comment has replies
+    if (!is.null(comment$data$replies$data$children)) {
+      # Iterate through the replies
+      for (reply in comment$data$replies$data$children) {
+        # Recursively call traverse_comments for each reply
+        traverse(reply)
+      }
+    }
+  }
+  
+  # Start traversing from top-level comments for each dataframe
+  for (parsed_content in parsed_content_list) {
+    for (comment in parsed_content$data$children) {
+      traverse(comment)
+    }
+  }
+  
+  # Additional comment to add
+  for (parsed_content in parsed_content_list) {
+    additional_comment <- parsed_content$data$children[[1]]$data$selftext
+    
+    # Add the additional comment to the end of the vector
+    all_comments <- c(additional_comment, all_comments)
+  }
+  
+  # Return the character vector containing all comments
+  return(all_comments)
+}
+```
+
+Finally a function to bring it all together and loop through the movie titles and return one big data frame with movie title searched with and the comments and sub comments returned with each movie.
+
+```{r}
+main_function <- function(movietitles) {
+   
+   # Initialize variables
+   all_combined_df <- list()
+   
+   # Get the token
+   token <- request_token()
+   
+   # Loop through each movie title
+   for (title in movietitles) {
+     
+     # Get the post link IDs for the current movie title
+     link_IDs <- collect_post_links(c(title), token) 
+     
+     # Get the comment json for the current movie title
+     parsed_content2 <- collect_JSONcomments(link_IDs, token)
+     
+     # Call the function to get all comments for the current movie title
+     all_comments <- traverse_comments(parsed_content2)
+     
+     # Create a data frame for the current movie title with all its comments
+     temp_df <- data.frame(movietitle = rep(title, length(all_comments)), all_comments =       all_comments, stringsAsFactors = FALSE)
+     
+     # Append the temporary data frame to the list
+     all_combined_df[[title]] <- temp_df
+   }
+   
+  # Combine all data frames in the list into one large data frame
+   combined_df <- do.call(rbind, all_combined_df)
+   
+   # Reset the row names to be sequential numbers
+   row.names(combined_df) <- NULL
+   
+   return(combined_df)
+}
+
+movietitle <- movie_titles[1:10]
+data_reddit <- main_function(movietitle)
+print(data_reddit)
+```
+
+## IMDB - Web scraping second stage
+
+URL
 
 ```{r}
 movie_link_nodes <- html_nodes(Top250_website, 'a.ipc-title-link-wrapper')
@@ -249,7 +487,7 @@ print(movies_df)
 
 ```
 
-## Trying for every URL
+### Trying for every URL
 
 ```{r}
 movies_df_final <- data.frame(
@@ -293,7 +531,6 @@ for (url in full_movie_urls) {
 }
 
 print(movies_df_final)
-
 ```
 
 ## Sensitive analysis of the Feature Reviews
@@ -324,25 +561,25 @@ Review_Sentiment <- function(review) {
 movies_df_final <- movies_df_final %>%
   mutate(ReviewClassification = map_chr(FeatureReview, Review_Sentiment))
 
-
+movies_df_final
 ```
 
 ## Sensitive analysis of the Reddit Comments
 
 ```{r}
-trial2
+data_reddit
 ```
 
 Cleaning the data
 
 ```{r}
-trial2$movietitle <- gsub("\\d+\\.\\s*", "", trial2$movietitle)
-trial2$movietitle <- trimws(trial2$movietitle)
+data_reddit$movietitle <- gsub("\\d+\\.\\s*", "", data_reddit$movietitle)
+data_reddit$movietitle <- trimws(data_reddit$movietitle)
 ```
 
 ```{r}
-trial2 <- na.omit(trial2)
-trial2 <- trial2[nchar(trimws(trial2$all_comments)) > 0, ]
+data_reddit <- na.omit(data_reddit)
+data_reddit <- data_reddit[nchar(trimws(data_reddit$all_comments)) > 0, ]
 ```
 
 ```{r}
@@ -366,7 +603,7 @@ Review_Sentiment_Reddit<- function(review) {
   }
 }
 
-trial2 <- trial2 %>%
+data_reddit <- data_reddit %>%
   mutate(ReviewClassificationReddit = map_chr(all_comments, Review_Sentiment_Reddit))
 ```
 
@@ -375,19 +612,26 @@ trial2 <- trial2 %>%
 ```{r}
 #Graph that shows for the Top three movies how many positve and negative comments they have in Reddit.
 
-
-first_three_movies <- trial2 %>% 
-  filter(movietitle %in% unique(trial2$movietitle)[1:3])
+first_three_movies <- data_reddit %>% 
+  filter(movietitle %in% unique(data_reddit$movietitle)[1:3])
 
 sentiment_counts <- first_three_movies %>% 
   group_by(movietitle, ReviewClassificationReddit) %>% 
   summarise(count = n(), .groups = 'drop')
 
+
 ggplot(sentiment_counts, aes(x = movietitle, y = count, fill = ReviewClassificationReddit)) +
   geom_bar(stat = "identity", position = position_dodge()) +
+  scale_fill_manual(values = c("negative" = "#8dd3c7", "neutral" = "#ffffb3", "positive" = "#bebada")) +
   labs(x = "Movie Title", y = "Number of Reviews", fill = "Sentiment") +
+  ggtitle("Sentiment Count for the First Three Movies") +
   theme_minimal() +
-  ggtitle("Sentiment Count for the First Three Movies")
+  theme(text = element_text(family = "sans"), 
+        plot.title = element_text(family = "sans"),
+        axis.title = element_text(family = "sans"),
+        axis.text = element_text(family = "sans")) 
+
+  
 
 ```
 
@@ -449,38 +693,6 @@ Plot2 <- ggplot(movies_per_decade, aes(x = Decade, y = Count)) +
   )
 
 print(Plot2)
-
-
-
-```
-
-```{r}
-movies_df_final$Budget <- as.numeric(gsub("[^0-9]", "", movies_df_final$Budget))
-movies_df_final$IMDbscore <- as.numeric(movies_df_final$IMDbscore)
-movies_df_final <- na.omit(movies_df_final)
-
-Plot3 <- ggplot(movies_df_final, aes(x = Budget, y = IMDbscore, size = Budget, color = IMDbscore)) +
-  geom_point(alpha = 1) +
-  scale_size_continuous(range = c(1, 8)) + 
-  scale_color_gradient(low = "blue", high = "red", limits = c(1, 10)) + 
-  scale_x_continuous(labels = dollar_format(prefix = "$", suffix = "")) +
-  scale_y_continuous(limits = c(1, 10), breaks = seq(1, 10, by = 1)) + 
-  theme_light() +
-  labs(title = "Bubble Chart of Movie Budgets vs. IMDB Score",
-       x = NULL,
-       y = NULL,
-       size = "Budget",
-       color = "IMDB Score") +
-  theme(
-    plot.title = element_text(face = "bold", family = "sans", size = 14),
-    axis.title = element_text(family = "sans", size = 12),
-    axis.text = element_text(family = "sans", size = 10),
-    legend.position = "right"
-  ) +
-  guides(size = FALSE, color = guide_legend()) 
-
-
-print(Plot3)
 
 
 ```
