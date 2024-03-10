@@ -90,12 +90,11 @@ A sentiment analysis is performed on the comments attained from the Reddit API c
 
 ### **Plots**
 
-Four descriptive plots were created to visualize the data set:
+Three descriptive plots were created to visualize the data set:
 
 1.  Sentiment Count for the First Three Movies: This plot displays the count of positive, negative, and neutral review classifications for the top three movies in the data set. It helps to understand which is the general sentiment towards this top three movies according to Reddit.
 2.  Top Genres by Review Classification: This plot displays the count of positive, negative, and neutral review classifications for the top genres in the data set. It helps in understanding which genres are most favored according to the sentiment analysis of the feature reviews.
 3.  Number of Movies from the Top 250 per Decade: A bar chart that shows the distribution of the movies in the IMDb Top 250 list across different decades. This plot provides insights into which decades are most represented in the list.
-4.  Bubble Chart of Movie Budgets vs. IMDB Score: This scatter plot visualizes the relationship between the budgets of the movies and their IMDb scores, with the size of each point representing the budget of the movie. The color gradient from blue to red indicates the range of IMDb scores. This plot helps in exploring whether there's a correlation between the movie's budget and its success on IMDb.
 
 **Notes**
 
