@@ -6,9 +6,11 @@ editor_options:
   chunk_output_type: inline
 ---
 
+
 ## Reddit API scraping!
 
 We will use the Reddit API to scrape comments about movie titles that we are interested in. In this case that is the 100 movie titles that we scraped from the IMBD website. We automate this using different functions and calling on all of them at the end in the main_function to collect a data frame that collects the name of movie that the comment is related to and the comments extracted from the discussion posts under the r/movies subreddit. It also scrapes some subcomments.
+
 
 ```{r}
 library(jsonlite)
@@ -20,10 +22,21 @@ library(magrittr)
 library(scrapex)
 
 #set your own user agent
+#set_config(
+  #user_agent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36; Alexandra Salo / alexandra.rose.salo@gmail.com"))
+
 set_config(
+
   user_agent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36; Alexandra Salo / alexandra.rose.salo@gmail.com")) #set your user agent
 
 useragent <- "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36; Alexandra Salo / alexandra.rose.salo@gmail.com" #we will call on this variable later, also set your user agent here
+
+  user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36; Sofia Villamil / sofia.v1999@gmail.com"))
+
+  useragent <-"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36; Sofia Villamil / sofia.v1999@gmail.com"
+
+# useragent <- "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36; Alexandra Salo / alexandra.rose.salo@gmail.com"
+
 ```
 
 A function to request a token from the Reddit API.
@@ -32,10 +45,15 @@ A function to request a token from the Reddit API.
 #function to collect a token for the Reddit API
 request_token <- function() {
   # Your Reddit app details
-  client_id <- "P6S7MQlutQirGAY3vxv7BQ" #personal script use, check readme file
-  client_secret <- "s1TY2MxqDrnsbRiGdSCokdSAOiSgFA" #secret code, check readme file
-  username <- "alexandra.rose.salo@gmail.com" #your reddit email
-  password <- "" #your Reddit password
+  client_id <- "JDy0zGRa48MlaIQGNX1vPA"
+  client_secret <- "mA178l-nYoxkbO3hJ1O297_NK5KJLQ"
+  username <- "sofia.v1999@gmail.com"
+  password <- "Solohc"
+  #client_id <- "P6S7MQlutQirGAY3vxv7BQ" #personal script use, check readme file
+  #client_secret <- "s1TY2MxqDrnsbRiGdSCokdSAOiSgFA" #secret code, check readme file
+  #username <- "alexandra.rose.salo@gmail.com" #your reddit email
+  #password <- "" #your Reddit password
+
 
   # Authenticate and get a token
   response <- POST(
@@ -70,6 +88,7 @@ extract_id <- function(link) {
 ```
 
 A function to collect a list with the ID of the links of the posts.
+
 
 ```{r}
 collect_post_links <- function(movietitles, token) {
@@ -121,6 +140,7 @@ collect_post_links <- function(movietitles, token) {
 ```
 
 Two functions to collect the JSON and convert it to comments to extract.
+
 
 ```{r}
 collect_JSONcomments <- function(IDcodes, token) {

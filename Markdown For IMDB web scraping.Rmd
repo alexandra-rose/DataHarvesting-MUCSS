@@ -8,7 +8,7 @@ output: html_document
 ## IMDB - Web scraping
 
 ```{r}
-rm(list = ls())
+#rm(list = ls())
 ```
 
 ### Libraries
@@ -21,7 +21,6 @@ library(tidytext)
 library(purrr)
 library(ggplot2)
 library(scales)
-
 ```
 
 ### Link to the website
@@ -32,8 +31,8 @@ link <- "https://www.imdb.com/chart/top"
 
 ```{r}
 set_config(
-  #user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36; Sofia Villamil / sofia.v1999@gmail.com"))
-  user_agent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36, Alexandra Salo, alexandra.rose.salo@gmail.com"))
+  user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36; Sofia Villamil / sofia.v1999@gmail.com"))
+  #user_agent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36, Alexandra Salo, alexandra.rose.salo@gmail.com"))
 
 Top250_website <- link %>% read_html()
 ```
@@ -328,7 +327,69 @@ movies_df_final <- movies_df_final %>%
 
 ```
 
+## Sensitive analysis of the Reddit Comments
+
+```{r}
+trial2
+```
+
+Cleaning the data
+
+```{r}
+trial2$movietitle <- gsub("\\d+\\.\\s*", "", trial2$movietitle)
+trial2$movietitle <- trimws(trial2$movietitle)
+```
+
+```{r}
+trial2 <- na.omit(trial2)
+trial2 <- trial2[nchar(trimws(trial2$all_comments)) > 0, ]
+```
+
+```{r}
+Review_Sentiment_Reddit<- function(review) {
+  sentiment_score_reddit <- data_frame(text = review) %>%
+    unnest_tokens(word, text) %>%
+    inner_join(get_sentiments("bing"), by = "word") %>%
+    summarise(net_sentiment = sum(case_when(
+      sentiment == "positive" ~ 1,
+      sentiment == "negative" ~ -1,
+      TRUE ~ 0
+    ))) %>%
+    pull(net_sentiment)
+  
+  if (sentiment_score_reddit > 0) {
+    return("positive")
+  } else if (sentiment_score_reddit < 0) {
+    return("negative")
+  } else {
+    return("neutral") 
+  }
+}
+
+trial2 <- trial2 %>%
+  mutate(ReviewClassificationReddit = map_chr(all_comments, Review_Sentiment_Reddit))
+```
+
 ## Descriptive analysis to understand the distribution of the data set.
+
+```{r}
+#Graph that shows for the Top three movies how many positve and negative comments they have in Reddit.
+
+
+first_three_movies <- trial2 %>% 
+  filter(movietitle %in% unique(trial2$movietitle)[1:3])
+
+sentiment_counts <- first_three_movies %>% 
+  group_by(movietitle, ReviewClassificationReddit) %>% 
+  summarise(count = n(), .groups = 'drop')
+
+ggplot(sentiment_counts, aes(x = movietitle, y = count, fill = ReviewClassificationReddit)) +
+  geom_bar(stat = "identity", position = position_dodge()) +
+  labs(x = "Movie Title", y = "Number of Reviews", fill = "Sentiment") +
+  theme_minimal() +
+  ggtitle("Sentiment Count for the First Three Movies")
+
+```
 
 ```{r}
 # Graph of the top genres of movies in my data set with their respective count of reviews sentiments
