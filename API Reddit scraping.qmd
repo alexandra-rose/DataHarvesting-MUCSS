@@ -6,7 +6,7 @@ editor_options:
   chunk_output_type: inline
 ---
 
-## 
+## Reddit - API
 
 ```{r}
 library(jsonlite)
@@ -18,10 +18,15 @@ library(magrittr)
 library(scrapex)
 
 #set your own user agent
-set_config(
-  user_agent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36; Alexandra Salo / alexandra.rose.salo@gmail.com"))
+#set_config(
+  #user_agent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36; Alexandra Salo / alexandra.rose.salo@gmail.com"))
 
-useragent <- "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36; Alexandra Salo / alexandra.rose.salo@gmail.com"
+set_config(
+  user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36; Sofia Villamil / sofia.v1999@gmail.com"))
+
+  useragent <-"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36; Sofia Villamil / sofia.v1999@gmail.com"
+
+# useragent <- "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36; Alexandra Salo / alexandra.rose.salo@gmail.com"
 ```
 
 The vibe
@@ -38,10 +43,14 @@ collect comments (link for
 #function to collect a token for the Reddit API
 request_token <- function() {
   # Your Reddit app details
-  client_id <- "P6S7MQlutQirGAY3vxv7BQ"
-  client_secret <- "s1TY2MxqDrnsbRiGdSCokdSAOiSgFA"
-  username <- "alexandra.rose.salo@gmail.com"
-  password <- "AmericanMom26"
+  client_id <- "JDy0zGRa48MlaIQGNX1vPA"
+  client_secret <- "mA178l-nYoxkbO3hJ1O297_NK5KJLQ"
+  username <- "sofia.v1999@gmail.com"
+  password <- "Solohc"
+  #client_id <- "P6S7MQlutQirGAY3vxv7BQ"
+  #client_secret <- "s1TY2MxqDrnsbRiGdSCokdSAOiSgFA"
+  #username <- "alexandra.rose.salo@gmail.com"
+  #password <- "AmericanMom26"
 
   # Authenticate and get a token
   response <- POST(
@@ -78,8 +87,7 @@ extract_id <- function(link) {
 
 ```
 
-\
-A function to collect a dataframe with the ID of the links of the posts and the movie name it was found with
+A function to collect a data frame with the ID of the links of the posts and the movie name it was found with
 
 ```{r}
 collect_post_links <- function(movietitles, token) {
@@ -133,7 +141,6 @@ collect_post_links <- function(movietitles, token) {
 #trial1
 ```
 
-\
 Get the JSON output from the posts page
 
 ```{r, eval = FALSE}
